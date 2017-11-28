@@ -7,3 +7,8 @@
 //
 
 import Foundation
+
+enum API {
+    
+    static let baseURL = "https://randomuser.me/api/"
+}

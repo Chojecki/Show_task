@@ -13,6 +13,8 @@ private let refreshControl = UIRefreshControl()
 
 class UserListViewController: UICollectionViewController, UICollectionViewDelegateFlowLayout, UISearchResultsUpdating {
     
+    private let dataManager = DataManager(baseURL: API.baseURL)
+    
     var users = [User]()
     var filteredUsers = [User]()
     var apiUrlPage = 1
@@ -23,6 +25,17 @@ class UserListViewController: UICollectionViewController, UICollectionViewDelega
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        setupNavigationItems()
+        setupCollectionView()
+        
+        fetchAPI()
+    }
+    
+    override var preferredStatusBarStyle : UIStatusBarStyle {
+        return UIStatusBarStyle.lightContent
+    }
+    
+    private func setupNavigationItems() {
         navigationItem.title = "Profiles"
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationController?.navigationBar.barTintColor = .white
@@ -39,22 +52,16 @@ class UserListViewController: UICollectionViewController, UICollectionViewDelega
         searchController.searchBar.placeholder = "Search Profiles"
         navigationItem.searchController = searchController
         definesPresentationContext = true
-
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Remove first cell", style: .plain, target: self, action: #selector(handleRemoveFirstCell(_:)))
+        refreshControl.addTarget(self, action: #selector(refreshProfiles(_:)), for: .valueChanged)
+    }
+    
+    private func setupCollectionView() {
         collectionView?.backgroundColor = .white
         collectionView?.register(UserListCell.self, forCellWithReuseIdentifier: reuseIdentifier)
         collectionView?.alwaysBounceVertical = true
         collectionView?.refreshControl = refreshControl
         collectionView?.contentInsetAdjustmentBehavior = .always
-        
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Remove first cell", style: .plain, target: self, action: #selector(handleRemoveFirstCell(_:)))
-        
-        refreshControl.addTarget(self, action: #selector(refreshProfiles(_:)), for: .valueChanged)
-        
-        fetchAPI()
-    }
-    
-    override var preferredStatusBarStyle : UIStatusBarStyle {
-        return UIStatusBarStyle.lightContent
     }
     
     @objc private func handleRemoveFirstCell(_ sender: Any) {
@@ -63,7 +70,14 @@ class UserListViewController: UICollectionViewController, UICollectionViewDelega
     }
     
     @objc private func refreshProfiles(_ sender: Any) {
-        fetchAPI()
+        dataManager.fetchUsers(seed: 1, page: 1) { (users) in
+            DispatchQueue.main.async {
+                self.users = users
+                self.collectionView?.reloadData()
+            }
+        }
+        
+        refreshControl.endRefreshing()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -81,27 +95,13 @@ class UserListViewController: UICollectionViewController, UICollectionViewDelega
     }
     
     func fetchAPI() {
-        let jsonUrlString = "https://randomuser.me/api/?seed=\(apiUrlSeed)&page=\(apiUrlPage)&results=20"
-        guard let url = URL(string: jsonUrlString) else { return }
-        
-        URLSession.shared.dataTask(with: url) { (data, respoinse, err) in
-            guard let data = data else { return }
-            
-            do {
-                let randomUsers = try JSONDecoder().decode(Results.self, from: data)
-                
-                self.users.append(contentsOf: randomUsers.results)
-                
-                DispatchQueue.main.async {
-                    self.collectionView?.reloadData()
-                }
-                
-            } catch let jsonErr {
-                print("Error:", jsonErr)
+
+        dataManager.fetchUsers(seed: apiUrlSeed, page: apiUrlPage) { (users) in
+            DispatchQueue.main.async {
+                self.users.append(contentsOf: users)
+                self.collectionView?.reloadData()
             }
-        }.resume()
-        
-        refreshControl.endRefreshing()
+        }
     }
     
     func updateSearchResults(for searchController: UISearchController) {
@@ -115,7 +115,8 @@ class UserListViewController: UICollectionViewController, UICollectionViewDelega
     //TODO: unwrap name
     func filterContentForSearchText(_ searchText: String, scope: String = "All") {
         filteredUsers = users.filter({(user : User) -> Bool in
-            return (user.name["first"]!.lowercased().contains(searchText.lowercased()))
+            guard let userName = user.name["first"] else { return false }
+            return (userName.lowercased().contains(searchText.lowercased()))
         })
         
         collectionView?.reloadData()
@@ -160,9 +161,17 @@ class UserListViewController: UICollectionViewController, UICollectionViewDelega
     }
     
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let tappedUser = users[indexPath.item]
-        let profileDetailViewController = ProfileDetailViewController()
-        profileDetailViewController.user = tappedUser
+        
+        let layout = UICollectionViewFlowLayout()
+        let profileDetailViewController = ProfileDetailViewController(collectionViewLayout: layout)
+        
+        if isFiltering() {
+            let tappedUser = filteredUsers[indexPath.item]
+            profileDetailViewController.user = tappedUser
+        } else {
+            let tappedUser = users[indexPath.item]
+            profileDetailViewController.user = tappedUser
+        }
         
         navigationController?.pushViewController(profileDetailViewController, animated: true)
     }

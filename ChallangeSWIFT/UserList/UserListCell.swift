@@ -17,7 +17,7 @@ class UserListCell: UICollectionViewCell {
             guard let unwrapedUserName = unwrapedUser.name["first"] else { return }
             guard let unwrapedImageUrl = unwrapedUser.picture["thumbnail"] else { return }
             
-            userNameTextView.text = unwrapedUserName
+            userNameTextView.text = unwrapedUserName.capitalizingFirstLetter()
             userProfileImageView.loadImage(urlString: unwrapedImageUrl)
             
         }

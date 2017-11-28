@@ -27,12 +27,12 @@ class MainTabBarController: UITabBarController {
         navListViewController.tabBarItem.image = #imageLiteral(resourceName: "search_unselected")
         navListViewController.tabBarItem.selectedImage = #imageLiteral(resourceName: "search_selected")
         
-        //profile
-        let profileDetailViewController = ProfileDetailViewController()
-        let navProfileDetailViewController = UINavigationController(rootViewController: profileDetailViewController)
+        //webView
+        let webViewViewController = WebViewViewController()
+        let navProfileDetailViewController = UINavigationController(rootViewController: webViewViewController)
         
-        navProfileDetailViewController.tabBarItem.image = #imageLiteral(resourceName: "profile_unselected")
-        navProfileDetailViewController.tabBarItem.selectedImage = #imageLiteral(resourceName: "profile_selected")
+        navProfileDetailViewController.tabBarItem.image = #imageLiteral(resourceName: "grid-world")
+        navProfileDetailViewController.tabBarItem.selectedImage = #imageLiteral(resourceName: "grid-world")
         
         tabBar.tintColor = UIColor(red: 255/255, green: 8/255, blue: 0/255, alpha: 1)
         

@@ -12,8 +12,16 @@ struct Results: Decodable {
     let results: [User]
 }
 
+struct Location: Decodable {
+    let city: String
+}
+
 struct User: Decodable {
     let name: [String: String]
     let picture: [String: String]
+    let cell: String
+    let email: String
+    let location: Location
+    let gender: String
 }
 
