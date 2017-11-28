@@ -13,6 +13,11 @@ private let reuseIdentifierHeader = "CellId_detail_header"
 
 class ProfileDetailViewController: UICollectionViewController, UICollectionViewDelegateFlowLayout {
     
+    convenience init(){
+        let layout = UICollectionViewLayout()
+        self.init(collectionViewLayout: layout)
+    }
+    
     var details: [InfoDetail] = [ InfoDetail(info: "No data", icon: #imageLiteral(resourceName: "phone-call")) ]
     var user: User? {
         didSet {

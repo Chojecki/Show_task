@@ -162,8 +162,7 @@ class UserListViewController: UICollectionViewController, UICollectionViewDelega
     
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
-        let layout = UICollectionViewFlowLayout()
-        let profileDetailViewController = ProfileDetailViewController(collectionViewLayout: layout)
+        let profileDetailViewController = ProfileDetailViewController()
         
         if isFiltering() {
             let tappedUser = filteredUsers[indexPath.item]
